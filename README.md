@@ -1,0 +1,2 @@
+# TextAi
+Creating antiplagiat app
