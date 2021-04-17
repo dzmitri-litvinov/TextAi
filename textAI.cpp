@@ -9,9 +9,9 @@ using namespace std;
 #define TOTAL_WORDS 256
 #define SHINGLE 3
 #define TO_BE_REMOVED "чтд кг км м г с а к но и да не или либо же а что чтобы как так, и т.д., и пр., и др. " 
-#define SEPARATORS "., !:-Ч;"
+#define SEPARATORS "., !:-Ч;?\"\'"
 #define ENG_LETTERS "AaBCcEeHKkMmOoPpTXxYy"
-#define RUS_LETTERS "ја¬—с≈еЌ кћмќо–р≈’х”у"
+#define RUS_LETTERS "ја¬—с≈еЌ кћмќо–р“’х”у"
 #define RUS_UPP_TO_LOW_CASE 32
 
 bool isSeparator(char c);
@@ -21,23 +21,30 @@ void strCat(char str1[], char str2[]);
 void strCpy(char str1[], char str2[]);
 void strCpyStrToChar(char str1[], string str2);
 int strCmp(char str1[], char str2[]);
-void emptyTextArray(char textSplitted[][N_WORD], int numberOfRaws);
+void emptyTextArray(char textSplitted[][N_WORD], int numberOfRows);
 void splitText(char text[], char textSplitted[][N_WORD], char wordsToBeRemoved[][N_WORD]);
 void createWordsToBeRemoved(char toBeRemoved[], char wordsToBeRemoved[][N_WORD]);
-void replaseEngLetters(char textAr[]);
+void replaceEngLetters(char textAr[]);
 void replaceUpperCase(char textAr[]);
 bool isWordForTransfer(char word[]);
 bool isNumber(char word[]);
 bool isToBeRemoved(char word[], char wordsToBeRemoved[][N_WORD]);
 int calcTextUnits(char textSplitted[][N_WORD]);
 double calcPlagiatRate(char textSplitted[][N_WORD], char fragmentSplitted[][N_WORD]);
+double antiPlagiat(string text, string fragment);
 
 int main()
 {
-    SetConsoleCP(1251); 
-    SetConsoleOutputCP(1251); 
-    string text = "aЅ и пр. 2 cCB√ ƒ≈ »  Ћћ Ќќ либо", fragment = "¬√ ƒ≈ »  Ћћ";
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    string text = "aЅ и пр. 2 B√ ƒ≈\"»  Ћћ Ќќ либо", fragment = "¬√ ƒ≈ »  Ћћ";
 
+    cout << "Pl: " << antiPlagiat(text, fragment);
+
+    return 0;
+}
+
+double antiPlagiat(string text, string fragment) {
     char textAr[N], fragmentAr[N], toBeRemoved[] = TO_BE_REMOVED;
     char textSplitted[TOTAL_WORDS][N_WORD], fragmentSplitted[TOTAL_WORDS][N_WORD], wordsToBeRemoved[TOTAL_WORDS][N_WORD];
     int textUnits = 0, fragmentUnits = 0, toRemoveUnits = 0;
@@ -45,11 +52,11 @@ int main()
     strCpyStrToChar(textAr, text);
     strCpyStrToChar(fragmentAr, fragment);
 
-    replaseEngLetters(textAr);
+    replaceEngLetters(textAr);
     replaceUpperCase(textAr);
-    replaseEngLetters(fragmentAr);
+    replaceEngLetters(fragmentAr);
     replaceUpperCase(fragmentAr);
-    
+
     emptyTextArray(textSplitted, TOTAL_WORDS);
     emptyTextArray(fragmentSplitted, TOTAL_WORDS);
     emptyTextArray(wordsToBeRemoved, TOTAL_WORDS);
@@ -57,22 +64,18 @@ int main()
     createWordsToBeRemoved(toBeRemoved, wordsToBeRemoved);
     splitText(textAr, textSplitted, wordsToBeRemoved);
     splitText(fragmentAr, fragmentSplitted, wordsToBeRemoved);
-    
-  
 
-    cout << "Text: " << textUnits << "; Fragment: " << fragmentUnits << endl;
+    double pagiat = calcPlagiatRate(textSplitted, fragmentSplitted);
 
-    calcPlagiatRate(textSplitted, fragmentSplitted);
-
-    
-    for (int i = 0; i < 10; i++)
-    {
+    /*cout << "Text:" << endl;
+    for (int i = 0; i < calcTextUnits(textSplitted); i++)
         cout << i + 1 << ") \"" << textSplitted[i] << "\"" << endl;
-    }
 
-    
+    cout << endl<< "Fragment:" << endl;
+    for (int i = 0; i < calcTextUnits(fragmentSplitted); i++)
+        cout << i + 1 << ") \"" << fragmentSplitted[i] << "\"" << endl;*/
 
-    return 0;
+    return pagiat;
 }
 
 bool isSeparator(char c)
@@ -155,9 +158,9 @@ int strCmp(char str1[], char str2[])
     }
 }
 
-void emptyTextArray(char textSplitted[][N_WORD], int numberOfRaws)
+void emptyTextArray(char textSplitted[][N_WORD], int numberOfRows)
 {
-    for (int i = 0; i < numberOfRaws; i++)
+    for (int i = 0; i < numberOfRows; i++)
         textSplitted[i][0] = '\0';
 }
 
@@ -202,7 +205,7 @@ void createWordsToBeRemoved(char toBeRemoved[], char wordsToBeRemoved[][N_WORD])
     }
 }
 
-void replaseEngLetters(char textAr[])
+void replaceEngLetters(char textAr[])
 {
     char engLetters[] = ENG_LETTERS;
     char rusLetters[] = RUS_LETTERS;
@@ -257,7 +260,7 @@ bool isToBeRemoved(char word[], char wordsToBeRemoved[][N_WORD])
     for (int i = 0; i < numberOfWordsToRemove; i++)
         if (strCmp(word, wordsToBeRemoved[i]) == 0)
             return true;
-    
+
     return false;
 }
 
@@ -296,7 +299,7 @@ double calcPlagiatRate(char textSplitted[][N_WORD], char fragmentSplitted[][N_WO
             if (isEquial)
             {
                 shinglesEquial++;
-                break;
+                break;  
             }
         }
 
@@ -305,9 +308,8 @@ double calcPlagiatRate(char textSplitted[][N_WORD], char fragmentSplitted[][N_WO
 
     plagiat = (double)shinglesEquial / (double)shinglesTotal;
 
-    cout << "Total: " << shinglesTotal << endl;
-    cout << "Eq: " << shinglesEquial << endl;
-    cout << "Pl: " << plagiat << endl;
+    //cout << "Total: " << shinglesTotal << endl;
+    //cout << "Eq: " << shinglesEquial << endl;
 
     return plagiat;
 }
